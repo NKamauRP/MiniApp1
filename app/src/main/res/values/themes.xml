@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.MiniApp1" parent="Theme.MaterialComponents.Light" />
+</resources>
