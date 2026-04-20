@@ -60,6 +60,21 @@ class ChatViewModel() : ViewModel() {
         }
     }
 
+    fun forceCpuInitialize(modelPath: String) {
+        viewModelScope.launch {
+            _initializationState.value = ChatInitializationState.Initializing
+            try {
+                repository.forceCpuInitialize(modelPath)
+                _initializationState.value = ChatInitializationState.Ready
+                _error.value = null
+            } catch (e: Exception) {
+                val errorMsg = e.localizedMessage ?: "Unknown initialization error"
+                _initializationState.value = ChatInitializationState.Error(errorMsg)
+                _error.value = "Failed to initialize CPU engine: $errorMsg"
+            }
+        }
+    }
+
     fun sendMessage(text: String) {
         if (text.isBlank()) return
         if (!repository.isInitialized()) {

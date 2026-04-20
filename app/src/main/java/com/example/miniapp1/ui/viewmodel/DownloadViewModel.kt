@@ -62,8 +62,11 @@ class DownloadViewModel(
             _downloadState.value = DownloadState.Completed
             viewModelScope.launch {
                 try {
+                    // Forcing CPU on this specific device might be safer based on logs,
+                    // but let's try standard initialize first which now has a mutex.
                     chatRepository.initialize(modelPath)
                 } catch (e: Exception) {
+                    _downloadState.value = DownloadState.Error("Initialization failed: ${e.message}")
                 }
             }
         } else {
@@ -88,7 +91,13 @@ class DownloadViewModel(
                             _availableModels.value = _availableModels.value.map { 
                                 if (it.id == "gemma-4-e2b") it.copy(isDownloaded = true) else it
                             }
-                            chatRepository.initialize(Constants.getModelPath(getApplication()))
+                            viewModelScope.launch {
+                                try {
+                                    chatRepository.initialize(Constants.getModelPath(getApplication()))
+                                } catch (e: Exception) {
+                                    _downloadState.value = DownloadState.Error("Initialization failed: ${e.message}")
+                                }
+                            }
                         }
                         WorkInfo.State.FAILED -> {
                             val error = workInfo.outputData.getString(DownloadWorker.KEY_ERROR) ?: "Download failed"

@@ -104,11 +104,22 @@ fun ChatScreen(
                                 }
                             }
                             is ChatInitializationState.Error -> {
-                                Text(
-                                    "Error initializing", 
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.error
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        "Error initializing", 
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    TextButton(
+                                        onClick = { 
+                                            viewModel.forceCpuInitialize(downloadViewModel.getModelPath("gemma-4-e2b"))
+                                        },
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("Try CPU", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
                             }
                         }
                     }
@@ -152,7 +163,10 @@ fun ChatScreen(
                 EmptyChatState(
                     modifier = Modifier.align(Alignment.Center),
                     downloaded = downloadViewModel.isModelDownloaded("gemma-4-e2b"),
-                    onNavigateToSettings = onNavigateToSettings
+                    onNavigateToSettings = onNavigateToSettings,
+                    onRetryInit = {
+                        viewModel.initializeModel(downloadViewModel.getModelPath("gemma-4-e2b"))
+                    }
                 )
             } else {
                 LazyColumn(
@@ -263,7 +277,8 @@ fun ChatInputBar(
 fun EmptyChatState(
     modifier: Modifier = Modifier,
     downloaded: Boolean,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onRetryInit: () -> Unit
 ) {
     Column(
         modifier = modifier.padding(32.dp),
@@ -287,6 +302,11 @@ fun EmptyChatState(
             Button(onClick = onNavigateToSettings) {
                 Text("Go to Download Manager")
             }
+        } else {
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = onRetryInit) {
+                Text("Retry Initialization")
+            }
         }
     }
 }
@@ -295,6 +315,10 @@ fun EmptyChatState(
 @Composable
 fun ChatScreenPreview() {
     MiniApp1Theme {
-        ChatScreen(onNavigateToSettings = {})
+        EmptyChatState(
+            downloaded = false,
+            onNavigateToSettings = {},
+            onRetryInit = {}
+        )
     }
 }
